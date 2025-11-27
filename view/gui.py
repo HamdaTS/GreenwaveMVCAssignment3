@@ -50,6 +50,33 @@ class GreenWaveGUI:
         tk.Button(self.frame, text="Upgrade Ticket", command=self.upgrade_ticket_screen).grid(row=4, column=0)
         tk.Button(self.frame, text="Logout", command=self.logout).grid(row=5, column=0)
 
+    def modify_account_screen(self):
+        self.clear_frame()
+        tk.Label(self.frame, text="New Email").grid(row=0, column=0)
+        new_email_entry = tk.Entry(self.frame)
+        new_email_entry.grid(row=0, column=1)
+
+
+        tk.Label(self.frame, text="New Password").grid(row=1, column=0)
+        new_pass_entry = tk.Entry(self.frame, show="*")
+        new_pass_entry.grid(row=1, column=1)
+
+
+    def save_changes():
+        new_email = new_email_entry.get()
+        new_pass = new_pass_entry.get()
+        if new_email:
+            self.controller.logged_in.account.email = new_email
+            if new_pass:
+                self.controller.logged_in.account.password = new_pass
+            self.controller.save_attendees()
+            messagebox.showinfo("Updated", "Account information updated")
+            self.create_dashboard()
+
+
+        tk.Button(self.frame, text="Save", command=save_changes).grid(row=2, column=0, columnspan=2)
+        tk.Button(self.frame, text="Back", command=self.create_dashboard).grid(row=3, column=0, columnspan=2)
+
     def admin_login_screen(self):
         self.clear_frame()
         tk.Label(self.frame, text="Admin Username").grid(row=0, column=0)
