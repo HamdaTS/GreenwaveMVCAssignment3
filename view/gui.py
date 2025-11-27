@@ -7,7 +7,7 @@ class GreenWaveGUI:
         self.controller = GreenWaveController()
         self.root = root
         self.root.title("GreenWave Conference Ticketing System")
-        self.root.geometry("500x400")
+        self.root.geometry("600x500")
 
         self.frame = tk.Frame(self.root)
         self.frame.pack(pady=20)
@@ -27,6 +27,7 @@ class GreenWaveGUI:
 
         tk.Button(self.frame, text="Login", command=self.login).grid(row=2, column=0)
         tk.Button(self.frame, text="Register", command=self.create_register_screen).grid(row=2, column=1)
+        tk.Button(self.frame, text="Admin Login", command=self.admin_login_screen).grid(row=3, column=0, columnspan=2)
 
     def create_register_screen(self):
         self.clear_frame()
@@ -49,6 +50,51 @@ class GreenWaveGUI:
         tk.Button(self.frame, text="Upgrade Ticket", command=self.upgrade_ticket_screen).grid(row=4, column=0)
         tk.Button(self.frame, text="Logout", command=self.logout).grid(row=5, column=0)
 
+    def admin_login_screen(self):
+        self.clear_frame()
+        tk.Label(self.frame, text="Admin Username").grid(row=0, column=0)
+        self.username_entry.grid(row=0, column=1)
+        tk.Label(self.frame, text="Admin Password").grid(row=1, column=0)
+        self.password_entry.grid(row=1, column=1)
+
+        tk.Button(self.frame, text="Login as Admin", command=self.admin_login).grid(row=2, column=0, columnspan=2)
+        tk.Button(self.frame, text="Back", command=self.create_login_screen).grid(row=3, column=0, columnspan=2)
+
+    def admin_dashboard(self):
+        self.clear_frame()
+        tk.Label(self.frame, text="Admin Dashboard").pack()
+        tk.Button(self.frame, text="View Sales Reports", command=self.view_sales).pack(pady=5)
+        tk.Button(self.frame, text="View Workshop Attendance", command=self.view_workshop_capacity).pack(pady=5)
+        tk.Button(self.frame, text="Back", command=self.create_login_screen).pack(pady=5)
+
+    def view_sales(self):
+        reports = self.controller.get_sales_reports()
+        if not reports:
+            messagebox.showinfo("Sales Report", "No reports available.")
+            return
+        msg = ""
+        for report in reports:
+            msg += f"Date: {report.date}\nTickets Sold: {report.tickets_sold}\nTotal Sales: AED {report.total_sales}\n\n"
+        messagebox.showinfo("Sales Report", msg)
+
+    def view_workshop_capacity(self):
+        workshops = self.controller.get_all_workshops()
+        msg = ""
+        for w in workshops:
+            msg += f"{w.title} (Exhibition {w.exhibition}) - Seats left: {w.capacity}\n"
+        messagebox.showinfo("Workshop Attendance", msg)
+
+    def admin_login(self):
+        username = self.username_entry.get()
+        password = self.password_entry.get()
+        try:
+            if self.controller.validate_admin(username, password):
+                self.admin_dashboard()
+            else:
+                messagebox.showerror("Error", "Invalid admin credentials")
+        except:
+            messagebox.showerror("Error", "Error during admin login")
+
     def ticket_purchase_screen(self):
         self.clear_frame()
         tk.Label(self.frame, text="Choose Ticket Type:").pack()
@@ -56,7 +102,7 @@ class GreenWaveGUI:
         self.ticket_vars = []
         for ticket in self.controller.ticket_types:
             var = tk.IntVar()
-            cb = tk.Radiobutton(self.frame, text=f"{ticket.ticket_name} - AED {ticket.price}", variable=var, value=1)
+            cb = tk.Radiobutton(self.frame, text=f"{ticket.name} - AED {ticket.price}", variable=var, value=1)
             cb.pack(anchor='w')
             self.ticket_vars.append((var, ticket))
 
@@ -92,14 +138,14 @@ class GreenWaveGUI:
             messagebox.showerror("Error", "Please login first")
             return
         current = self.controller.logged_in.pass_ref.ticket_type
-        tk.Label(self.frame, text=f"Current Ticket: {current.ticket_name}").pack(pady=10)
+        tk.Label(self.frame, text=f"Current Ticket: {current.name}").pack(pady=10)
         tk.Label(self.frame, text="Select upgrade:").pack()
 
         self.upgrade_options = []
         for ticket in self.controller.ticket_types:
             if ticket.price > current.price:
                 var = tk.IntVar()
-                tk.Radiobutton(self.frame, text=f"{ticket.ticket_name} - AED {ticket.price}", variable=var, value=1).pack(anchor='w')
+                tk.Radiobutton(self.frame, text=f"{ticket.name} - AED {ticket.price}", variable=var, value=1).pack(anchor='w')
                 self.upgrade_options.append((var, ticket))
 
         tk.Button(self.frame, text="Upgrade", command=self.upgrade_ticket).pack(pady=10)
@@ -140,7 +186,7 @@ class GreenWaveGUI:
 
     def show_details(self):
         att = self.controller.logged_in
-        ticket = att.pass_ref.ticket_type.ticket_name if att.pass_ref else "No Ticket"
+        ticket = att.pass_ref.ticket_type.name if att.pass_ref else "No Ticket"
         msg = f"Username: {att.account.username}\nEmail: {att.account.email}\nTicket: {ticket}"
         messagebox.showinfo("Your Details", msg)
 
@@ -163,4 +209,5 @@ if __name__ == '__main__':
     root = tk.Tk()
     app = GreenWaveGUI(root)
     root.mainloop()
+
 
